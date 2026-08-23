@@ -8,11 +8,29 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { parseLocalDateParam, toLocalDateParam } from "@/lib/date";
+import { getWorkoutDatesForMonth } from "@/app/dashboard/actions";
 
-export function DatePicker({ date }: { date: string }) {
+export function DatePicker({
+  date,
+  initialMonthWorkoutDates,
+}: {
+  date: string;
+  initialMonthWorkoutDates: string[];
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const selected = parseLocalDateParam(date);
+  const [prevDate, setPrevDate] = useState(date);
+  const [month, setMonth] = useState(selected);
+  const [workoutDates, setWorkoutDates] = useState(
+    initialMonthWorkoutDates.map(parseLocalDateParam),
+  );
+
+  if (date !== prevDate) {
+    setPrevDate(date);
+    setMonth(selected);
+    setWorkoutDates(initialMonthWorkoutDates.map(parseLocalDateParam));
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -28,6 +46,14 @@ export function DatePicker({ date }: { date: string }) {
         <Calendar
           mode="single"
           selected={selected}
+          month={month}
+          onMonthChange={async (nextMonth) => {
+            setMonth(nextMonth);
+            const dates = await getWorkoutDatesForMonth(nextMonth.getFullYear(), nextMonth.getMonth());
+            setWorkoutDates(dates.map(parseLocalDateParam));
+          }}
+          modifiers={{ hasWorkout: workoutDates }}
+          modifiersClassNames={{ hasWorkout: "border border-[#ccc]" }}
           onSelect={(value) => {
             if (!value) return;
             setOpen(false);

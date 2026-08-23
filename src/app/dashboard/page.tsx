@@ -6,6 +6,7 @@ import { exercises, sets, workoutExercises, workouts } from "@/db/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/date-picker";
 import { isValidDateParam, parseDateParam, toDateParam } from "@/lib/date";
+import { getWorkoutDatesForMonth } from "@/app/dashboard/actions";
 
 type ExerciseWithSets = {
   id: string;
@@ -100,13 +101,18 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
   const dateParam =
     typeof rawDate === "string" && isValidDateParam(rawDate) ? rawDate : toDateParam(new Date());
 
-  const workoutsForDate = await getWorkoutsForDate(userId, parseDateParam(dateParam));
+  const selectedDate = parseDateParam(dateParam);
+  const workoutsForDate = await getWorkoutsForDate(userId, selectedDate);
+  const initialMonthWorkoutDates = await getWorkoutDatesForMonth(
+    selectedDate.getUTCFullYear(),
+    selectedDate.getUTCMonth(),
+  );
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-10">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <DatePicker date={dateParam} />
+        <DatePicker date={dateParam} initialMonthWorkoutDates={initialMonthWorkoutDates} />
       </div>
 
       {workoutsForDate.length === 0 ? (
