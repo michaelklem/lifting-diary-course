@@ -1,90 +1,8 @@
-import { auth } from "@clerk/nextjs/server";
-import { and, asc, eq, gte, inArray, lt } from "drizzle-orm";
 import { format } from "date-fns";
-import { db } from "@/db";
-import { exercises, sets, workoutExercises, workouts } from "@/db/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/date-picker";
 import { isValidDateParam, parseDateParam, toDateParam } from "@/lib/date";
-import { getWorkoutDatesForMonth } from "@/app/dashboard/actions";
-
-type ExerciseWithSets = {
-  id: string;
-  name: string;
-  sets: { id: string; setNumber: number; reps: number; weight: string | null }[];
-};
-
-async function getWorkoutsForDate(userId: string, date: Date) {
-  const startOfDay = date;
-  const endOfDay = new Date(date.getTime() + 24 * 60 * 60 * 1000);
-
-  const dayWorkouts = await db
-    .select({
-      id: workouts.id,
-      name: workouts.name,
-      startedAt: workouts.startedAt,
-      completedAt: workouts.completedAt,
-    })
-    .from(workouts)
-    .where(
-      and(
-        eq(workouts.userId, userId),
-        gte(workouts.startedAt, startOfDay),
-        lt(workouts.startedAt, endOfDay),
-      ),
-    )
-    .orderBy(asc(workouts.startedAt));
-
-  if (dayWorkouts.length === 0) return [];
-
-  const workoutIds = dayWorkouts.map((w) => w.id);
-
-  const exerciseRows = await db
-    .select({
-      id: workoutExercises.id,
-      workoutId: workoutExercises.workoutId,
-      name: exercises.name,
-    })
-    .from(workoutExercises)
-    .innerJoin(exercises, eq(workoutExercises.exerciseId, exercises.id))
-    .where(inArray(workoutExercises.workoutId, workoutIds))
-    .orderBy(asc(workoutExercises.position));
-
-  const workoutExerciseIds = exerciseRows.map((row) => row.id);
-
-  const setRows = workoutExerciseIds.length
-    ? await db
-        .select({
-          id: sets.id,
-          workoutExerciseId: sets.workoutExerciseId,
-          setNumber: sets.setNumber,
-          reps: sets.reps,
-          weight: sets.weight,
-        })
-        .from(sets)
-        .where(inArray(sets.workoutExerciseId, workoutExerciseIds))
-        .orderBy(asc(sets.setNumber))
-    : [];
-
-  const setsByExercise = new Map<string, typeof setRows>();
-  for (const set of setRows) {
-    const list = setsByExercise.get(set.workoutExerciseId) ?? [];
-    list.push(set);
-    setsByExercise.set(set.workoutExerciseId, list);
-  }
-
-  const exercisesByWorkout = new Map<string, ExerciseWithSets[]>();
-  for (const row of exerciseRows) {
-    const list = exercisesByWorkout.get(row.workoutId) ?? [];
-    list.push({ id: row.id, name: row.name, sets: setsByExercise.get(row.id) ?? [] });
-    exercisesByWorkout.set(row.workoutId, list);
-  }
-
-  return dayWorkouts.map((workout) => ({
-    ...workout,
-    exercises: exercisesByWorkout.get(workout.id) ?? [],
-  }));
-}
+import { getWorkoutDatesForMonth, getWorkoutsForDate } from "@/data/workouts";
 
 function formatTime(date: Date) {
   return format(date, "h:mm a");
@@ -95,24 +13,32 @@ function formatSet(set: { reps: number; weight: string | null }) {
 }
 
 export default async function DashboardPage(props: PageProps<"/dashboard">) {
-  const { userId } = await auth.protect();
+  const searchParams = await props.searchParams;
 
-  const rawDate = (await props.searchParams).date;
+  const rawDate = searchParams.date;
   const dateParam =
     typeof rawDate === "string" && isValidDateParam(rawDate) ? rawDate : toDateParam(new Date());
 
+  const rawMonth = searchParams.month;
+  const monthParam =
+    typeof rawMonth === "string" && isValidDateParam(rawMonth)
+      ? rawMonth
+      : `${dateParam.slice(0, 7)}-01`;
+
   const selectedDate = parseDateParam(dateParam);
-  const workoutsForDate = await getWorkoutsForDate(userId, selectedDate);
-  const initialMonthWorkoutDates = await getWorkoutDatesForMonth(
-    selectedDate.getUTCFullYear(),
-    selectedDate.getUTCMonth(),
+  const viewedMonth = parseDateParam(monthParam);
+
+  const workoutsForDate = await getWorkoutsForDate(selectedDate);
+  const monthWorkoutDates = await getWorkoutDatesForMonth(
+    viewedMonth.getUTCFullYear(),
+    viewedMonth.getUTCMonth(),
   );
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-10">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <DatePicker date={dateParam} initialMonthWorkoutDates={initialMonthWorkoutDates} />
+        <DatePicker date={dateParam} month={monthParam} monthWorkoutDates={monthWorkoutDates} />
       </div>
 
       {workoutsForDate.length === 0 ? (

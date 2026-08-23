@@ -8,29 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { parseLocalDateParam, toLocalDateParam } from "@/lib/date";
-import { getWorkoutDatesForMonth } from "@/app/dashboard/actions";
 
 export function DatePicker({
   date,
-  initialMonthWorkoutDates,
+  month,
+  monthWorkoutDates,
 }: {
   date: string;
-  initialMonthWorkoutDates: string[];
+  month: string;
+  monthWorkoutDates: string[];
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const selected = parseLocalDateParam(date);
-  const [prevDate, setPrevDate] = useState(date);
-  const [month, setMonth] = useState(selected);
-  const [workoutDates, setWorkoutDates] = useState(
-    initialMonthWorkoutDates.map(parseLocalDateParam),
-  );
-
-  if (date !== prevDate) {
-    setPrevDate(date);
-    setMonth(selected);
-    setWorkoutDates(initialMonthWorkoutDates.map(parseLocalDateParam));
-  }
+  const viewedMonth = parseLocalDateParam(month);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -46,13 +37,14 @@ export function DatePicker({
         <Calendar
           mode="single"
           selected={selected}
-          month={month}
-          onMonthChange={async (nextMonth) => {
-            setMonth(nextMonth);
-            const dates = await getWorkoutDatesForMonth(nextMonth.getFullYear(), nextMonth.getMonth());
-            setWorkoutDates(dates.map(parseLocalDateParam));
+          month={viewedMonth}
+          onMonthChange={(nextMonth) => {
+            const nextMonthParam = toLocalDateParam(
+              new Date(nextMonth.getFullYear(), nextMonth.getMonth(), 1),
+            );
+            router.push(`/dashboard?date=${date}&month=${nextMonthParam}`, { scroll: false });
           }}
-          modifiers={{ hasWorkout: workoutDates }}
+          modifiers={{ hasWorkout: monthWorkoutDates.map(parseLocalDateParam) }}
           modifiersClassNames={{ hasWorkout: "border border-[#ccc]" }}
           onSelect={(value) => {
             if (!value) return;
