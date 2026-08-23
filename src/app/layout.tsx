@@ -1,6 +1,7 @@
 import { ClerkProvider, SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +36,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               <SignUpButton />
             </Show>
             <Show when="signed-in">
+              <Link href="/dashboard" className="text-sm font-medium hover:underline">
+                Dashboard
+              </Link>
               <UserButton />
             </Show>
           </header>
