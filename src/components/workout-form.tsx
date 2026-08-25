@@ -16,10 +16,12 @@ export function WorkoutForm({
   action,
   defaultValues,
   submitLabel,
+  cancelHref,
 }: {
   action: (state: WorkoutFormState, formData: FormData) => Promise<WorkoutFormState>;
   defaultValues: { name: string; date: string };
   submitLabel: string;
+  cancelHref?: string;
 }) {
   const [state, formAction, pending] = useActionState(action, {});
   const [date, setDate] = useState(defaultValues.date);
@@ -78,9 +80,11 @@ export function WorkoutForm({
           <Button type="submit" disabled={pending}>
             {pending ? "Saving…" : submitLabel}
           </Button>
-          <Button variant="ghost" nativeButton={false} render={<Link href="/dashboard" />}>
-            Cancel
-          </Button>
+          {cancelHref && (
+            <Button variant="ghost" nativeButton={false} render={<Link href={cancelHref} />}>
+              Cancel
+            </Button>
+          )}
         </div>
       </FieldGroup>
     </form>

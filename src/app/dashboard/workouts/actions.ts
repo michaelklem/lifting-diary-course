@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import * as z from "zod";
 import { createWorkout, getWorkoutById, updateWorkout } from "@/data/workouts";
-import { isValidDateParam, parseDateParam, toDateParam } from "@/lib/date";
+import { isValidDateParam, parseDateParam } from "@/lib/date";
 
 const workoutFormSchema = z.object({
   name: z.string().trim().max(100, { error: "Name must be 100 characters or fewer." }),
@@ -54,7 +54,7 @@ export async function createWorkoutAction(
   });
 
   revalidatePath("/dashboard");
-  redirect(`/dashboard?date=${toDateParam(created.startedAt)}`);
+  redirect(`/dashboard/workouts/${created.id}`);
 }
 
 export async function updateWorkoutAction(
@@ -76,5 +76,6 @@ export async function updateWorkoutAction(
   if (!updated) return { errors: { form: ["Could not save the workout."] } };
 
   revalidatePath("/dashboard");
-  redirect(`/dashboard?date=${toDateParam(updated.startedAt)}`);
+  revalidatePath(`/dashboard/workouts/${workoutId}`);
+  redirect(`/dashboard/workouts/${workoutId}`);
 }

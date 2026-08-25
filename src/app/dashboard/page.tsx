@@ -5,14 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/date-picker";
 import { isValidDateParam, parseDateParam, toDateParam } from "@/lib/date";
+import { formatSet } from "@/lib/format";
 import { getWorkoutDatesForMonth, getWorkoutsForDate } from "@/data/workouts";
 
 function formatTime(date: Date) {
   return format(date, "h:mm a");
-}
-
-function formatSet(set: { reps: number; weight: string | null }) {
-  return set.weight ? `${set.reps} × ${Number(set.weight)} lb` : `${set.reps} reps`;
 }
 
 export default async function DashboardPage(props: PageProps<"/dashboard">) {
@@ -62,7 +59,11 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
             <li key={workout.id}>
               <Card>
                 <CardHeader className="flex-row items-baseline justify-between gap-4 space-y-0">
-                  <CardTitle>{workout.name ?? "Workout"}</CardTitle>
+                  <CardTitle>
+                    <Link href={`/dashboard/workouts/${workout.id}`} className="hover:underline">
+                      {workout.name ?? "Workout"}
+                    </Link>
+                  </CardTitle>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">
                       {formatTime(workout.startedAt)}
@@ -75,7 +76,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
                       size="icon-sm"
                       aria-label="Edit workout"
                       nativeButton={false}
-                      render={<Link href={`/dashboard/workouts/${workout.id}/edit`} />}
+                      render={<Link href={`/dashboard/workouts/${workout.id}`} />}
                     >
                       <Pencil />
                     </Button>

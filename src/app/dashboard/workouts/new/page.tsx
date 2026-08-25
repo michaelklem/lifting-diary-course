@@ -21,6 +21,7 @@ export default async function NewWorkoutPage(props: PageProps<"/dashboard/workou
             action={createWorkoutAction}
             defaultValues={{ name: "", date }}
             submitLabel="Create workout"
+            cancelHref="/dashboard"
           />
         </CardContent>
       </Card>
