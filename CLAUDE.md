@@ -6,7 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Before writing any code
 
-**IMPORTANT**: \clearAlways check the `docs/` directory first and follow whatever standards it contains — they are binding project conventions, not suggestions. For example, `docs/ui.md` defines the UI component and date-formatting rules. Re-check `docs/` as it grows; don't rely on this file alone to know what's in there.
+**IMPORTANT**: Always check the `docs/` directory first and follow whatever standards it contains — they are binding project conventions, not suggestions. Re-check `docs/` as it grows; don't rely on this file alone to know what's in there.
+
+Documentation files:
+
+- `docs/data-fetching.md` — data-fetching rules: Server Components only, Drizzle queries in `src/data/`, tenant isolation
+- `docs/ui.md` — UI component and date-formatting rules
+- `docs/routing.md` — routing rules: all app routes under `/dashboard`, protected via Clerk in `src/proxy.ts` (Next.js 16 middleware)
 
 ## Project status
 
