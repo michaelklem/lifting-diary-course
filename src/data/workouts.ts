@@ -97,3 +97,43 @@ export async function getWorkoutsForDate(date: Date) {
     exercises: exercisesByWorkout.get(workout.id) ?? [],
   }));
 }
+
+export async function getWorkoutById(id: string) {
+  const { userId } = await auth.protect();
+
+  const [workout] = await db
+    .select({
+      id: workouts.id,
+      name: workouts.name,
+      startedAt: workouts.startedAt,
+      completedAt: workouts.completedAt,
+    })
+    .from(workouts)
+    .where(and(eq(workouts.id, id), eq(workouts.userId, userId)))
+    .limit(1);
+
+  return workout ?? null;
+}
+
+export async function createWorkout(input: { name: string | null; startedAt: Date }) {
+  const { userId } = await auth.protect();
+
+  const [created] = await db
+    .insert(workouts)
+    .values({ userId, name: input.name, startedAt: input.startedAt })
+    .returning({ id: workouts.id, startedAt: workouts.startedAt });
+
+  return created;
+}
+
+export async function updateWorkout(id: string, input: { name: string | null; startedAt: Date }) {
+  const { userId } = await auth.protect();
+
+  const [updated] = await db
+    .update(workouts)
+    .set({ name: input.name, startedAt: input.startedAt, updatedAt: new Date() })
+    .where(and(eq(workouts.id, id), eq(workouts.userId, userId)))
+    .returning({ id: workouts.id, startedAt: workouts.startedAt });
+
+  return updated ?? null;
+}

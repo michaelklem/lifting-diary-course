@@ -1,4 +1,7 @@
+import Link from "next/link";
 import { format } from "date-fns";
+import { Pencil, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePicker } from "@/components/date-picker";
 import { isValidDateParam, parseDateParam, toDateParam } from "@/lib/date";
@@ -38,7 +41,13 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-10">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <DatePicker date={dateParam} month={monthParam} monthWorkoutDates={monthWorkoutDates} />
+        <div className="flex items-center gap-2">
+          <DatePicker date={dateParam} month={monthParam} monthWorkoutDates={monthWorkoutDates} />
+          <Button nativeButton={false} render={<Link href={`/dashboard/workouts/new?date=${dateParam}`} />}>
+            <Plus data-icon="inline-start" />
+            Add new workout
+          </Button>
+        </div>
       </div>
 
       {workoutsForDate.length === 0 ? (
@@ -54,12 +63,23 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
               <Card>
                 <CardHeader className="flex-row items-baseline justify-between gap-4 space-y-0">
                   <CardTitle>{workout.name ?? "Workout"}</CardTitle>
-                  <span className="text-sm text-muted-foreground">
-                    {formatTime(workout.startedAt)}
-                    {workout.completedAt
-                      ? ` – ${formatTime(workout.completedAt)}`
-                      : " (in progress)"}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {formatTime(workout.startedAt)}
+                      {workout.completedAt
+                        ? ` – ${formatTime(workout.completedAt)}`
+                        : " (in progress)"}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Edit workout"
+                      nativeButton={false}
+                      render={<Link href={`/dashboard/workouts/${workout.id}/edit`} />}
+                    >
+                      <Pencil />
+                    </Button>
+                  </div>
                 </CardHeader>
 
                 {workout.exercises.length > 0 && (
